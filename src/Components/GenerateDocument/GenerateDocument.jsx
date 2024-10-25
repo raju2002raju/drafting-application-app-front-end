@@ -384,53 +384,43 @@ const Section = ({
   );
 };
 
-const Preview = ({ isOpen, onClose, sections, onExport, onUpdateContent, selectedSectionId, onSelect }) => {
+const Preview = ({ isOpen, onClose, sections, onExport }) => {
   if (!isOpen) return null;
 
-  return (
-    <div className="flex justify-end border">
-      <div className=" overflow-auto">
-        <div className="sticky top-0 bg-white z-10 p-6 border-b">
-          <div className="flex justify-between items-center">
-            <div className="space-x-2">
-              <button
-                onClick={() => onExport('pdf')}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-              >
-                <Download className="w-4 h-4 inline-block mr-2" />
-                Export PDF
-              </button>
-              <button
-                onClick={() => onExport('docx')}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-              >
-                <Download className="w-4 h-4 inline-block mr-2" />
-                Export DOCX
-              </button>
-            </div>
+  return (  
+    <div className="fixed inset-0 bg-white z-50 overflow-auto">
+      <div className="max-w-4xl mx-auto p-8">
+        <div className="flex justify-between items-center mb-6">
+          <div className="space-x-2">
             <button
-              onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 transition-colors"
+              onClick={() => onExport('pdf')}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
-              <X className="h-6 w-6" />
+              <Download className="w-4 h-4 inline-block mr-2" />
+              Export PDF
+            </button>
+            <button
+              onClick={() => onExport('docx')}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              <Download className="w-4 h-4 inline-block mr-2" />
+              Export DOCX
             </button>
           </div>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <X className="h-6 w-6" />
+          </button>
         </div>
         
-        <div className="p-6">
-          <div className="max-w-2xl mx-auto space-y-6">
-            {sections.map((section, index) => (
-              <div 
-                key={index} 
-                className={`preview-section p-4 rounded-lg ${
-                  selectedSectionId === section.id ? 'bg-blue-50' : ''
-                }`}
-              >
-                <h3 className="font-medium mb-2">{section.title}</h3>
-                {typeof section.content === 'string' ? section.content : JSON.stringify(section.content)}
-              </div>
-            ))}
-          </div>
+        <div className="space-y-6">
+          {sections.map((section, index) => (
+            <div key={index} className="preview-section">
+              {typeof section.content === 'string' ? section.content : JSON.stringify(section.content)}
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -567,6 +557,8 @@ const GenerateDocument = () => {
         : section
     ));
   };
+
+
 
   const handleExport = async (format) => {
     try {
@@ -720,9 +712,8 @@ const GenerateDocument = () => {
         </div>
 
         {sections.length > 0 ? (
-          <div className="mt-8  flex w-full ">
-           <div>
-           {sections.map(section => (
+          <div className="mt-8 space-y-6">
+            {sections.map(section => (
               <Section
                 key={section.id}
                 section={section}
@@ -734,18 +725,7 @@ const GenerateDocument = () => {
                 isDisabled={isResetting}
                 onUpdateContent={handleUpdateSectionContent}
               />
-
             ))}
-
-           </div>
-         <div>
-         <Preview
-          isOpen={showPreview}
-          onClose={() => setShowPreview(false)}
-          sections={sections}
-          onExport={handleExport}
-        />
-         </div>
           </div>
         ) : (
           <div className="text-center mb-60">
@@ -813,7 +793,12 @@ const GenerateDocument = () => {
           </div>
         </Modal>
 
-       
+        <Preview
+          isOpen={showPreview}
+          onClose={() => setShowPreview(false)}
+          sections={sections}
+          onExport={handleExport}
+        />
 
         <footer className="text-center text-gray-500 text-sm mt-8">
         <div className="flex items-center justify-center mb-2">
