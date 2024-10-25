@@ -1,3 +1,3 @@
-export const baseUrl = 'http://localhost:8080';  // Named export
+export const baseUrl = 'https://drafting-application-app-backend.onrender.com';  // Named export
 
 // https://drafting-application-app-backend.onrender.com
