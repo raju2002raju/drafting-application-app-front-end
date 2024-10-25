@@ -64,7 +64,7 @@ const LoginPage = () => {
       <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6 space-y-6">
         <div className="text-center">
           <div className="w-16 h-16 mx-auto mb-4 bg-blue-600 rounded-xl flex items-center justify-center">
-           <img src='/Images/firstdraftlogowithbackground.png' className='rounded'/>
+           <img src='/Images/firstdraftlogowithbackground.png' alt="first image" className='rounded' />
           </div>
           <h1 className="text-2xl font-bold">Welcome to FirstDRAFT</h1>
           <p className="text-gray-600 mt-2">Register or Login</p>
@@ -73,7 +73,7 @@ const LoginPage = () => {
         <div className="space-y-4">
           <div className="flex border rounded-lg overflow-hidden">
             <div className="flex items-center px-3 bg-white border-r">
-              <img src="https://flagcdn.com/w20/in.png" alt="Indian flag" className="w-6" />
+              <img src="https://flagcdn.com/w20/in.png" alt="Indian flag" className="w-6"  />
               <span className="ml-2">+91</span>
             </div>
             <input

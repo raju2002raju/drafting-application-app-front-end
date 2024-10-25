@@ -1,6 +1,6 @@
 // Section.jsx
 import React, { useRef, useState } from 'react';
-import { Pencil, Copy, Trash2, Plus, Square, Mic } from 'lucide-react';
+import { Copy, Trash2, Plus, Square, Mic } from 'lucide-react';
 import { baseUrl } from '../Config';
 import { AiChat } from '../AiChat/AiChat';
 

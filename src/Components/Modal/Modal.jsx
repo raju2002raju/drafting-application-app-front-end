@@ -1,6 +1,5 @@
 // Modal.jsx
 import React from 'react';
-import { X } from 'lucide-react';
 
 export const Modal = ({ isOpen, onClose, children }) => {
   if (!isOpen) return null;

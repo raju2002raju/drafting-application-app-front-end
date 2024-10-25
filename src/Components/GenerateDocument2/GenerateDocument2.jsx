@@ -159,6 +159,7 @@ const GenerateDocument2 = () => {
           console.error('Export failed:', error);
         }
       };
+
       const handleFileUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -174,7 +175,6 @@ const GenerateDocument2 = () => {
           const formData = new FormData();
           formData.append('file', file);
       
-          // First, send the file to backend for text extraction
           const extractResponse = await fetch(`${baseUrl}/api/extract-text`, {
             method: 'POST',
             body: formData
@@ -186,34 +186,97 @@ const GenerateDocument2 = () => {
       
           const { text } = await extractResponse.json();
           
-          // Process the extracted text
-          const lines = text.split('\n').filter(line => line.trim());
-          const sheet1 = [];
-          let currentIndex = -1;
-          
-          lines.forEach(line => {
-            if (line.includes(':')) {
-              currentIndex++;
-              const [fieldName, ...contentParts] = line.split(':');
-              const fieldContent = contentParts.join(':').trim();
+          // Split text into individual sections
+          const processContent = (text) => {
+            const sections = [];
+            let sectionCounter = 1; 
+            
+            // Split text into lines and clean them
+            const lines = text.split('\n')
+              .map(line => line.trim())
+              .filter(line => line.length > 0);
+            
+            let currentParagraph = '';
+            
+            lines.forEach((line, index) => {
+              const isBulletPoint = /^[\u2022\u2023\u25E6\u2043\u2022\-\*]\s+/.test(line);
+              const isNumberedList = /^\d+[\.)]\s+/.test(line);
               
-              sheet1.push({
-                NameofFields: fieldName.trim(),
-                ExampleContent: fieldContent
+              if (isBulletPoint) {
+                if (currentParagraph) {
+                  sections.push({
+                    NameofFields: `Section ${sectionCounter}`,
+                    ExampleContent: currentParagraph.trim()
+                  });
+                  sectionCounter++;
+                  currentParagraph = '';
+                }
+                
+                const bulletContent = line.replace(/^[\u2022\u2023\u25E6\u2043\u2022\-\*]\s+/, '').trim();
+                sections.push({
+                  NameofFields: `Section ${sectionCounter}`,
+                  ExampleContent: '• ' + bulletContent
+                });
+                sectionCounter++;
+              }
+              else if (isNumberedList) {
+                if (currentParagraph) {
+                  sections.push({
+                    NameofFields: `Section ${sectionCounter}`,
+                    ExampleContent: currentParagraph.trim()
+                  });
+                  sectionCounter++;
+                  currentParagraph = '';
+                }
+                
+                const numberMatch = line.match(/^\d+/)[0];
+                const numberedContent = line.replace(/^\d+[\.)]\s+/, '').trim();
+                sections.push({
+                  NameofFields: `Section ${sectionCounter}`,
+                  ExampleContent: `${numberMatch}. ${numberedContent}`
+                });
+                sectionCounter++;
+              }
+              else {
+                if (currentParagraph && 
+                    (currentParagraph.endsWith('.') || 
+                     currentParagraph.endsWith('!') || 
+                     currentParagraph.endsWith('?'))) {
+                  sections.push({
+                    NameofFields: `Section ${sectionCounter}`,
+                    ExampleContent: currentParagraph.trim()
+                  });
+                  sectionCounter++;
+                  currentParagraph = line;
+                } else {
+                  // Add to current paragraph with proper spacing
+                  currentParagraph = currentParagraph 
+                    ? currentParagraph + ' ' + line 
+                    : line;
+                }
+              }
+            });
+            
+            // Add any remaining paragraph
+            if (currentParagraph) {
+              sections.push({
+                NameofFields: `Section ${sectionCounter}`,
+                ExampleContent: currentParagraph.trim()
               });
-            } else if (currentIndex >= 0) {
-              // Append line to previous content if it's a continuation
-              sheet1[currentIndex].ExampleContent += '\n' + line.trim();
             }
-          });
+            
+            return sections;
+          };
       
-          const CHUNK_SIZE = 500 * 1024;
+          const sheet1 = processContent(text);
+          
           const documentData = {
             id: uuidv4(),
             Sheet1: sheet1
           };
       
           // Handle large documents with chunking
+          const CHUNK_SIZE = 500 * 1024;
           if (JSON.stringify(documentData).length > CHUNK_SIZE) {
             const chunks = [];
             for (let i = 0; i < sheet1.length; i += 50) {
@@ -254,6 +317,15 @@ const GenerateDocument2 = () => {
             }
           }
       
+          // Update the sections state to trigger re-render with new boxes
+          setDocumentData(documentData);
+          const formattedSections = documentData.Sheet1.map((item, index) => ({
+            id: index,
+            title: item.NameofFields,
+            content: item.ExampleContent,
+          }));
+          setSections(formattedSections);
+      
           e.target.value = '';
           alert('Document uploaded successfully!');
       
@@ -262,7 +334,6 @@ const GenerateDocument2 = () => {
           alert(`Error processing file: ${error.message}`);
         }
       };
-
 
   return (
     <div className="min-h-screen bg-white">
@@ -292,13 +363,13 @@ const GenerateDocument2 = () => {
                   value={selectedTemplate || ''}
                   disabled={isResetting}
                 >
-                  <option value="">Select Template (Optional)</option>
-                  {templates.map((template) => (
-                    <option key={template._id} value={template._id}>
-                      {template.name}
-                    
-                    </option>
-                  ))}
+                 <option value="">Select Template (Optional)</option>
+{templates.map((template) => (
+  <option key={template._id} value={template._id}>
+    {template.name.length > 20 ? `${template.name.substring(0, 96)}...` : template.name}
+  </option>
+))}
+
                 </select>
 
                 {selectedTemplate && (
@@ -366,12 +437,12 @@ const GenerateDocument2 = () => {
                 value={selectedTemplate || ''}
                 disabled={isResetting}
               >
-                <option value="">Select Template (Optional)</option>
-                {templates.map((template) => (
-                  <option key={template._id} value={template._id}>
-                    {template.name}
-                  </option>
-                ))}
+                            <option value="">Select Template (Optional)</option>
+{templates.map((template) => (
+  <option key={template._id} value={template._id}>
+    {template.name.length > 20 ? `${template.name.substring(0, 96)}...` : template.name}
+  </option>
+))}
               </select>
 
               {selectedTemplate && (
